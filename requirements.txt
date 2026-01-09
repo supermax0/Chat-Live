@@ -11,4 +11,4 @@ eventlet==0.33.3
 gunicorn==21.2.0
 
 # Utilities
-Werkzeug==2.3.7
+
