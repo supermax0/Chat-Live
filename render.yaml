@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: live-chat-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        value: ./chat.db
+    healthCheckPath: /
+    plan: starter
+    disk:
+      name: chat-db
+      mountPath: /opt/render/project/src
+      sizeGB: 1

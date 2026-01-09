@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
+    <title>لوحة تحكم مندوب المبيعات</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="login-screen" id="loginScreen">
+            <div class="login-card">
+                <h1>لوحة تحكم مندوب المبيعات</h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="repUsername">اسم المستخدم:</label>
+                        <input type="text" id="repUsername" required placeholder="أدخل اسم المستخدم">
+                    </div>
+                    <div class="form-group">
+                        <label for="repPassword">كلمة المرور:</label>
+                        <input type="password" id="repPassword" required placeholder="أدخل كلمة المرور">
+                    </div>
+                    <button type="submit" class="btn btn-primary">تسجيل الدخول</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="dashboard-container hidden" id="dashboardContainer">
+            <div class="dashboard-header">
+                <div class="header-title-section">
+                    <h1>لوحة تحكم مندوب المبيعات</h1>
+                    <button class="btn btn-logout-header" id="repLogoutBtn" onclick="logoutRep()" title="تسجيل الخروج">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>تسجيل الخروج</span>
+                    </button>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-card stat-waiting">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-content">
+                            <span class="stat-label">عملاء منتظرون</span>
+                            <span class="stat-value" id="waitingCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-active">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-content">
+                            <span class="stat-label">محادثات نشطة</span>
+                            <span class="stat-value" id="activeChatsCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-messages">
+                        <div class="stat-icon">📨</div>
+                        <div class="stat-content">
+                            <span class="stat-label">رسائل اليوم</span>
+                            <span class="stat-value" id="messagesToday">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-status">
+                        <div class="stat-icon">🟢</div>
+                        <div class="stat-content">
+                            <span class="stat-label">الحالة</span>
+                            <span class="stat-value online" id="repStatus">متصل</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-content">
+                <div class="conversations-sidebar" id="conversationsSidebar">
+                    <div class="sidebar-header">
+                        <h3>المحادثات</h3>
+                        <div class="conversation-filters">
+                            <select id="filterStatus" class="filter-select">
+                                <option value="all">الكل</option>
+                                <option value="active">نشطة</option>
+                                <option value="waiting">منتظرة</option>
+                            </select>
+                            <select id="sortBy" class="filter-select">
+                                <option value="recent">الأحدث</option>
+                                <option value="oldest">الأقدم</option>
+                                <option value="unread">غير مقروءة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="searchConversations" placeholder="🔍 ابحث في المحادثات...">
+                    </div>
+                    <div class="conversations-list" id="conversationsList">
+                        <p class="empty-state">لا توجد محادثات حالياً</p>
+                    </div>
+                </div>
+
+                <div class="chat-panel" id="chatPanel">
+                    <div class="chat-placeholder" id="chatPlaceholder">
+                        <div class="placeholder-content">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <p>اختر محادثة لعرضها</p>
+                        </div>
+                    </div>
+
+                    <div class="chat-container hidden" id="chatContainer">
+                        <div class="chat-header">
+                            <button class="back-button" id="backButton" onclick="goBackToConversations()" title="رجوع">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                                </svg>
+                            </button>
+                            <div class="header-info">
+                                <div class="customer-info">
+                                    <h2 id="chatTitle">المحادثة</h2>
+                                    <span class="customer-details" id="customerDetails"></span>
+                                </div>
+                                <span class="status-indicator">
+                                    <span class="status-dot active" id="customerStatusDot"></span>
+                                    <span id="customerStatusText">متصل</span>
+                                </span>
+                            </div>
+                            <div class="chat-actions">
+                                <button class="action-btn" id="markReadBtn" title="تمييز كمقروء" style="display: none;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="chat-messages" id="chatMessages"></div>
+
+                        <div class="typing-indicator hidden" id="typingIndicator">
+                            <span>العميل يكتب</span>
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+
+                        <div class="quick-actions" id="quickActions">
+                            <button class="quick-action-btn" onclick="sendQuickMessage('مرحباً بك! كيف يمكنني مساعدتك؟')">مرحباً</button>
+                            <button class="quick-action-btn" onclick="sendQuickMessage('شكراً لك على تواصلك معنا')">شكراً</button>
+                            <button class="quick-action-btn" onclick="sendQuickMessage('هل تحتاج مزيد من المساعدة؟')">مساعدة إضافية</button>
+                            <button class="quick-action-btn btn-product" id="sendProductBtn" title="إرسال منتج">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                </svg>
+                                إرسال منتج
+                            </button>
+                        </div>
+
+                        <div class="chat-input-container">
+                            <div class="input-wrapper">
+                                <button class="file-upload-btn" id="fileUploadBtn" title="رفع ملف">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </button>
+                                <input type="text" id="messageInput" placeholder="اكتب ردك هنا...">
+                                <button class="emoji-btn" id="emojiBtn" title="إيموجي">😊</button>
+                                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                            </div>
+                            <button id="sendButton" class="btn btn-send">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة اختيار المنتج -->
+    <div class="modal" id="productSelectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>اختر منتج للإرسال</h2>
+                <button class="modal-close" id="closeProductSelectModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box" style="margin-bottom: 20px;">
+                    <input type="text" id="searchProducts" placeholder="🔍 ابحث عن منتج...">
+                </div>
+                <div class="products-select-list" id="productsSelectList">
+                    <p class="empty-state">جاري تحميل المنتجات...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificationContainer"></div>
+    
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="js/sales-rep.js"></script>
+</body>
+</html>

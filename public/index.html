@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+    <title>نظام المحادثة المباشرة - العميل</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="login-screen" id="loginScreen">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="login-icon">💬</div>
+                    <h1>مرحباً بك في نظام المحادثة</h1>
+                    <p class="login-subtitle">نحن هنا لمساعدتك في أي وقت</p>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="customerName">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            الاسم الكامل:
+                        </label>
+                        <input type="text" id="customerName" required placeholder="أدخل اسمك الكامل">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            رقم الهاتف:
+                        </label>
+                        <input type="tel" id="customerPhone" required placeholder="05xxxxxxxx" pattern="[0-9]{10}" maxlength="10">
+                        <small class="form-hint">أدخل رقم الهاتف بدون صفر في البداية (10 أرقام)</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <span>ابدأ المحادثة</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="chat-container hidden" id="chatContainer">
+            <div class="chat-header">
+                <div class="header-info">
+                    <div class="customer-header-info">
+                        <h2 id="chatTitle">المحادثة</h2>
+                        <span class="customer-phone" id="customerPhoneDisplay"></span>
+                    </div>
+                    <span class="status-indicator" id="statusIndicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="statusText">جاري البحث عن مندوب...</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <p>مرحباً! نحن هنا لمساعدتك. سيتم ربطك بمندوب مبيعات قريباً...</p>
+                </div>
+            </div>
+
+            <div class="typing-indicator hidden" id="typingIndicator">
+                <span>مندوب المبيعات يكتب</span>
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <button class="file-upload-btn" id="fileUploadBtn" title="رفع ملف">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </button>
+                    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." disabled>
+                    <button class="emoji-btn" id="emojiBtn" title="إيموجي">😊</button>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+                <button id="sendButton" class="btn btn-send" disabled>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تفاصيل المنتج -->
+    <div class="modal" id="productDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="productDetailsTitle">تفاصيل المنتج</h2>
+                <button class="modal-close" id="closeProductDetailsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="productDetailsContent">
+                    <!-- سيتم ملؤها بالتفاصيل -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificationContainer"></div>
+    
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="js/customer.js"></script>
+</body>
+</html>
