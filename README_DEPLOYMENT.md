@@ -105,7 +105,7 @@ Uploaded files are stored in the `uploads/` directory. For production, consider:
 
 ### Build Failures
 - Ensure all dependencies in `requirements.txt` are correct
-- Check Python version matches `runtime.txt` (3.11.0)
+- Check Python version matches `runtime.txt` (3.11.9)
 - Review build logs for specific error messages
 
 ## Monitoring

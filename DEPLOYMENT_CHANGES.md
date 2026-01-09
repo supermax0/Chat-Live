@@ -18,7 +18,7 @@ This document summarizes all changes made to prepare the Live Chat application f
    - Timeout and connection settings
 
 4. **`runtime.txt`** - Python version specification
-   - Sets Python 3.11.0
+   - Sets Python 3.11.9
 
 5. **`.gitignore`** - Git ignore file
    - Excludes Python cache files
