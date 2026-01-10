@@ -1,17 +1,6 @@
-# Monkey patch gevent before importing other modules
-try:
-    from gevent import monkey
-    monkey.patch_all()
-except ImportError:
-    print("Warning: gevent not available, falling back to threading")
-    pass
-
 from flask import Flask, request, jsonify, send_from_directory
-<<<<<<< HEAD
-from flask_socketio import SocketIO
-=======
 from flask_socketio import SocketIO, join_room, leave_room
->>>>>>> c57b589 (fix socketio emit usage for threading mode)
+
 from flask_cors import CORS
 import sqlite3
 import uuid
@@ -34,15 +23,11 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
-<<<<<<< HEAD
-    async_mode="threading"
-=======
     async_mode="threading",
     logger=True,
     engineio_logger=False,
     ping_timeout=60,
     ping_interval=25
->>>>>>> c57b589 (fix socketio emit usage for threading mode)
 )
 # تخزين الاتصالات النشطة
 active_users = {}
@@ -65,8 +50,6 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(os.path.join(UPLOAD_FOLDER, 'products'), exist_ok=True)
 os.makedirs(os.path.join(UPLOAD_FOLDER, 'images'), exist_ok=True)
-
-import threading
 
 # Thread-local storage للاتصالات
 _local = threading.local()
