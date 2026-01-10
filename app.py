@@ -7,7 +7,11 @@ except ImportError:
     pass
 
 from flask import Flask, request, jsonify, send_from_directory
+<<<<<<< HEAD
 from flask_socketio import SocketIO
+=======
+from flask_socketio import SocketIO, join_room, leave_room
+>>>>>>> c57b589 (fix socketio emit usage for threading mode)
 from flask_cors import CORS
 import sqlite3
 import uuid
@@ -26,11 +30,19 @@ app = Flask(__name__,
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Configure SocketIO for production with gevent
+# Configure SocketIO with threading mode
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
+<<<<<<< HEAD
     async_mode="threading"
+=======
+    async_mode="threading",
+    logger=True,
+    engineio_logger=False,
+    ping_timeout=60,
+    ping_interval=25
+>>>>>>> c57b589 (fix socketio emit usage for threading mode)
 )
 # تخزين الاتصالات النشطة
 active_users = {}
@@ -1076,11 +1088,11 @@ def handle_register(user_data):
                         except Exception as e:
                             print(f'Error assigning sales rep: {e}')
                         
-                        emit('conversation_created', {'conversationId': conversation_id})
+                        socketio.emit('conversation_created', {'conversationId': conversation_id})
                         socketio.emit('waiting_customers_update', len(waiting_customers))
                     else:
                         conversation_id = conversation['id']
-                        emit('conversation_joined', {'conversationId': conversation_id})
+                        socketio.emit('conversation_joined', {'conversationId': conversation_id})
                     
                     # حفظ جلسة العميل
                     if conversation_id:
@@ -1091,7 +1103,7 @@ def handle_register(user_data):
                         conn.commit()
                         
                         # إرسال session_id للعميل
-                        emit('customer_session', {'sessionId': session_id, 'conversationId': conversation_id})
+                        socketio.emit('customer_session', {'sessionId': session_id, 'conversationId': conversation_id})
                 except Exception as e:
                     print(f'Error in customer registration: {e}')
                     import traceback
@@ -1102,7 +1114,7 @@ def handle_register(user_data):
                 socketio.emit('waiting_customers_update', len(waiting_customers))
                 assign_waiting_customers(request.sid, user_id)
             
-            emit('registered', {'userId': user_id, 'name': name, 'role': role})
+            socketio.emit('registered', {'userId': user_id, 'name': name, 'role': role})
             socketio.emit('users_online', list(active_users.values()))
             return  # نجح، اخرج من الدالة
             
@@ -1113,13 +1125,13 @@ def handle_register(user_data):
                 continue
             else:
                 print(f'Database locked error in handle_register (attempt {retry_count + 1}): {e}')
-                emit('error', {'message': 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.'})
+                socketio.emit('error', {'message': 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.'})
                 return
         except Exception as e:
             print(f'Error in handle_register: {e}')
             import traceback
             traceback.print_exc()
-            emit('error', {'message': 'حدث خطأ غير متوقع.'})
+            socketio.emit('error', {'message': 'حدث خطأ غير متوقع.'})
             return
 
 @socketio.on('get_conversations')
@@ -1138,14 +1150,13 @@ def handle_get_conversations(data):
             WHERE c.customer_id = ? OR c.sales_rep_id = ?
             ORDER BY c.updated_at DESC''', (user_id, user_id))
         conversations = [dict(row) for row in cursor.fetchall()]
-        emit('conversations_list', conversations)
+        socketio.emit('conversations_list', conversations)
     except sqlite3.OperationalError as e:
         print(f'Database error in get_conversations: {e}')
-        emit('error', {'message': 'حدث خطأ في جلب المحادثات'})
+        socketio.emit('error', {'message': 'حدث خطأ في جلب المحادثات'})
     except Exception as e:
         print(f'Error in get_conversations: {e}')
-        emit('error', {'message': 'حدث خطأ غير متوقع'})
-
+        
 @socketio.on('join_conversation')
 def handle_join_conversation(data):
     conversation_id = data if isinstance(data, str) else data.get('conversationId')
@@ -1188,7 +1199,7 @@ def handle_join_conversation(data):
                         'specifications': msg.get('product_specifications')
                     }
             
-            emit('messages_history', messages)
+            socketio.emit('messages_history', messages)
             
             # تحديث حالة القراءة
             user = active_users.get(request.sid)
@@ -1207,11 +1218,13 @@ def handle_join_conversation(data):
                 continue
             else:
                 print(f'Database error in join_conversation: {e}')
-                emit('error', {'message': 'حدث خطأ في جلب الرسائل'})
+                socketio.emit('error', {'message': 'حدث خطأ غير متوقع'})
+
                 return
         except Exception as e:
             print(f'Error in join_conversation: {e}')
-            emit('error', {'message': 'حدث خطأ غير متوقع'})
+            socketio.emit('error', {'message': 'حدث خطأ غير متوقع'})
+
             return
 
 @socketio.on('send_message')
@@ -1318,13 +1331,13 @@ def handle_send_message(data):
                 continue
             else:
                 print(f'Database error in send_message (attempt {retry_count + 1}): {e}')
-                emit('error', {'message': 'حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.'})
+                socketio.emit('error', {'message': 'حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.'})
                 return
         except Exception as e:
             print(f'Error in send_message: {e}')
             import traceback
             traceback.print_exc()
-            emit('error', {'message': 'حدث خطأ غير متوقع في إرسال الرسالة.'})
+            socketio.emit('error', {'message': 'حدث خطأ غير متوقع في إرسال الرسالة.'})
             return
 
 @socketio.on('leave_conversation')
