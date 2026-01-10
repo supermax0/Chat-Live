@@ -1,9 +1,9 @@
-# Monkey patch eventlet before importing other modules
+# Monkey patch gevent before importing other modules
 try:
-    import eventlet
-    eventlet.monkey_patch()
+    from gevent import monkey
+    monkey.patch_all()
 except ImportError:
-    print("Warning: eventlet not available, falling back to threading")
+    print("Warning: gevent not available, falling back to threading")
     pass
 
 from flask import Flask, request, jsonify, send_from_directory
@@ -26,11 +26,11 @@ app = Flask(__name__,
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Configure SocketIO for production with eventlet
+# Configure SocketIO for production with gevent
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
-    async_mode='eventlet',
+    async_mode='gevent',
     logger=True,
     engineio_logger=False,
     ping_timeout=60,

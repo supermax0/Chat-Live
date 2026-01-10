@@ -30,7 +30,7 @@ Make sure all files are committed and pushed to your Git repository:
 - **Name**: live-chat-app (or your preferred name)
 - **Environment**: Python 3
 - **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - app:app`
+- **Start Command**: `gunicorn --worker-class gevent -w 1 --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - app:app`
 - **Plan**: Starter (or higher for production)
 
 ### 3. Environment Variables
@@ -69,7 +69,7 @@ DATABASE_URL=/opt/render/project/src/chat.db
 Render.com supports WebSockets out of the box. The application is configured to use:
 - **Eventlet** as the async worker
 - **Flask-SocketIO** with proper CORS settings
-- **Gunicorn** with eventlet worker class
+- **Gunicorn** with gevent worker class
 
 No additional configuration needed for WebSockets on Render.
 
@@ -94,7 +94,7 @@ Uploaded files are stored in the `uploads/` directory. For production, consider:
 - SQLite WAL mode is enabled in the code
 
 ### WebSocket Connection Issues
-- Check that `async_mode='eventlet'` is set in SocketIO initialization
+- Check that `async_mode='gevent'` is set in SocketIO initialization
 - Verify CORS settings allow your domain
 - Check Render logs for connection errors
 

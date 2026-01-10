@@ -7,8 +7,8 @@ bind = f"0.0.0.0:{os.environ.get('PORT', 10000)}"
 backlog = 2048
 
 # Worker processes
-workers = 1  # Use 1 worker for eventlet
-worker_class = 'eventlet'
+workers = 1  # Use 1 worker for gevent
+worker_class = 'gevent'
 worker_connections = 1000
 timeout = 120
 keepalive = 5

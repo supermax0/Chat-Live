@@ -248,7 +248,7 @@ python app.py
 
 ```bash
 # استخدام Gunicorn
-gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:10000 app:app
+gunicorn --worker-class gevent -w 1 --bind 0.0.0.0:10000 app:app
 ```
 
 ### الاختبار

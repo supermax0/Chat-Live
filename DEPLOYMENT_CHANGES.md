@@ -10,10 +10,10 @@ This document summarizes all changes made to prepare the Live Chat application f
    - Sets up persistent disk for database
 
 2. **`Procfile`** - Process file for Render.com (alternative to render.yaml)
-   - Defines the web process with gunicorn and eventlet
+   - Defines the web process with gunicorn and gevent
 
 3. **`.gunicorn.conf.py`** - Gunicorn configuration file
-   - Worker configuration for eventlet
+   - Worker configuration for gevent
    - Logging settings
    - Timeout and connection settings
 
@@ -39,11 +39,11 @@ This document summarizes all changes made to prepare the Live Chat application f
 ### `app.py`
 
 1. **Eventlet Import** (Lines 1-8)
-   - Added try-except for graceful fallback if eventlet is unavailable
+   - Added try-except for graceful fallback if gevent is unavailable
    - Better error handling
 
 2. **SocketIO Configuration** (Lines 21-30)
-   - Added explicit `async_mode='eventlet'` for production
+   - Added explicit `async_mode='gevent'` for production
    - Configured ping timeout and interval for WebSocket stability
    - Added logger configuration
 
@@ -76,8 +76,8 @@ This document summarizes all changes made to prepare the Live Chat application f
 ## Key Configuration Changes
 
 ### WebSocket Compatibility
-- ✅ Explicit `async_mode='eventlet'` in SocketIO
-- ✅ Gunicorn with eventlet worker class
+- ✅ Explicit `async_mode='gevent'` in SocketIO
+- ✅ Gunicorn with gevent worker class
 - ✅ Proper ping timeout/interval settings
 - ✅ CORS configured for WebSocket connections
 
@@ -109,7 +109,7 @@ Required environment variables for production:
 ## Deployment Checklist
 
 - [x] Fix SocketIO configuration
-- [x] Fix eventlet setup
+- [x] Fix gevent setup
 - [x] Fix static file serving
 - [x] Create deployment files
 - [x] Update requirements.txt
@@ -123,7 +123,7 @@ Before deploying to production:
 
 1. Test locally with gunicorn:
    ```bash
-   gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:10000 app:app
+   gunicorn --worker-class gevent -w 1 --bind 0.0.0.0:10000 app:app
    ```
 
 2. Test WebSocket connections:

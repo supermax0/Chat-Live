@@ -69,7 +69,7 @@ python app.py
 
 ## استكشاف الأخطاء
 
-### خطأ في تثبيت eventlet
+### خطأ في تثبيت gevent
 
 ```bash
 # Windows - قد تحتاج Visual C++ Build Tools

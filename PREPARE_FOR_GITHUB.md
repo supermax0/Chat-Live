@@ -65,7 +65,7 @@ git commit -m "Initial commit: Live Chat System with Flask and SocketIO
 - Admin dashboard for monitoring and management
 - Product cards with image/video support
 - Session persistence
-- WebSocket support with eventlet
+- WebSocket support with gevent
 - Ready for Render.com deployment"
 
 # Push إلى GitHub

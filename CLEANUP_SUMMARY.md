@@ -53,7 +53,8 @@ Flask-CORS==4.0.0
 
 # WebSocket and async support
 python-socketio==5.10.0
-eventlet==0.33.3
+gevent==23.9.1
+gevent-websocket==0.10.1
 
 # WSGI server for production
 gunicorn==21.2.0

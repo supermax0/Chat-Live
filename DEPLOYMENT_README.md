@@ -70,7 +70,7 @@ This project is ready for deployment on cloud platforms. Follow the guide below 
 
 2. **Configure:**
    - Build Command: `pip install -r requirements.txt`
-   - Run Command: `gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app`
+   - Run Command: `gunicorn --worker-class gevent -w 1 --bind 0.0.0.0:$PORT app:app`
    - Add Managed Database (PostgreSQL recommended for production)
 
 ## Environment Variables
@@ -132,7 +132,7 @@ After deployment:
 - SQLite WAL mode is enabled (already configured)
 
 ### WebSocket Issues
-- Verify `async_mode='eventlet'` in app.py
+- Verify `async_mode='gevent'` in app.py
 - Check CORS settings
 - Ensure platform supports WebSockets
 
