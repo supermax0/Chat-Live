@@ -7,8 +7,8 @@ except ImportError:
     pass
 
 from flask import Flask, request, jsonify, send_from_directory
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_cors import CORS
+from flask_socketio import SocketIO
+)from flask_cors import CORS
 import sqlite3
 import uuid
 import os
@@ -30,13 +30,8 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
-    async_mode='gevent',
-    logger=True,
-    engineio_logger=False,
-    ping_timeout=60,
-    ping_interval=25
+    async_mode="threading"
 )
-
 # تخزين الاتصالات النشطة
 active_users = {}
 waiting_customers = []
