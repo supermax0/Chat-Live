@@ -8,7 +8,7 @@ except ImportError:
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
-)from flask_cors import CORS
+from flask_cors import CORS
 import sqlite3
 import uuid
 import os
