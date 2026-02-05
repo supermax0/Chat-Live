@@ -1344,6 +1344,7 @@ function renderConversationMessages(messages) {
         const isAdmin = message.sender_role === 'admin';
         const isCustomer = message.sender_role === 'customer';
         const isRep = message.sender_role === 'sales_rep';
+        const isAi = message.sender_role === 'ai_agent';
         const timestamp = new Date(message.created_at).toLocaleString('ar-SA');
         
         let content = escapeHtml(message.message || '');
@@ -1371,9 +1372,9 @@ function renderConversationMessages(messages) {
         }
         
         return `
-            <div class="admin-message ${isAdmin ? 'admin-sent' : isRep ? 'rep-message' : 'customer-message'}">
+            <div class="admin-message ${isAdmin ? 'admin-sent' : isRep ? 'rep-message' : isAi ? 'ai-message' : 'customer-message'}">
                 <div class="message-header">
-                    <span class="sender-name">${escapeHtml(message.sender_name || 'غير محدد')}</span>
+                    <span class="sender-name">${escapeHtml(message.sender_name || (isAi ? 'وكيل المبيعات الذكي' : 'غير محدد'))}</span>
                     <span class="message-time">${timestamp}</span>
                 </div>
                 <div class="message-content">${content}</div>
