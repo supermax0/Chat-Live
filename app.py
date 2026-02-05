@@ -35,6 +35,11 @@ waiting_customers = []
 active_conversations = {}
 active_sessions = {}
 
+AI_AGENT_ID = 'ai_agent'
+AI_AGENT_NAME = os.environ.get('AI_AGENT_NAME', 'وكيل المبيعات الذكي')
+AI_AGENT_ROLE = 'ai_agent'
+AI_AGENT_ENABLED = os.environ.get('AI_AGENT_ENABLED', 'true').lower() != 'false'
+
 # قاعدة البيانات
 DB_FILE = os.environ.get('DATABASE_URL', './chat.db')
 # إذا كان DATABASE_URL يحتوي على مسار كامل، استخدمه مباشرة
@@ -214,6 +219,161 @@ def init_db():
     init_conn.commit()
     init_conn.close()
     print('تم الاتصال بقاعدة البيانات بنجاح')
+
+def ensure_ai_agent(conn):
+    cursor = conn.cursor()
+    cursor.execute('''INSERT OR REPLACE INTO users 
+        (id, name, phone, role, socket_id, is_online) 
+        VALUES (?, ?, ?, ?, ?, ?)''',
+        (AI_AGENT_ID, AI_AGENT_NAME, '', AI_AGENT_ROLE, None, 1))
+
+def fetch_products(conn, limit=5):
+    cursor = conn.cursor()
+    cursor.execute('''SELECT id, name, description, price, specifications
+        FROM products
+        ORDER BY updated_at DESC
+        LIMIT ?''', (limit,))
+    return [dict(row) for row in cursor.fetchall()]
+
+def build_ai_response(customer_message, products):
+    normalized = (customer_message or '').strip().lower()
+    product_match = next((p for p in products if p.get('name') and p['name'].lower() in normalized), None)
+
+    if not products:
+        return {
+            'text': 'حالياً لا توجد منتجات مضافة في النظام. هل يمكنك توضيح ما الذي تبحث عنه؟ سأقوم بتحويلك لمندوب عند توفره.',
+            'product_ids': []
+        }
+
+    if any(keyword in normalized for keyword in ['مرحبا', 'السلام', 'اهلا', 'مرحباً', 'hello', 'hi']):
+        return {
+            'text': 'مرحباً بك! أنا وكيل المبيعات الذكي. أخبرني ما المنتج الذي تبحث عنه وسأساعدك فوراً.',
+            'product_ids': []
+        }
+
+    if product_match and any(keyword in normalized for keyword in ['سعر', 'بكم', 'كم', 'price']):
+        price_text = f"{product_match.get('price')} ر.س" if product_match.get('price') else 'السعر متغير حسب المواصفات'
+        return {
+            'text': f"سعر {product_match.get('name')} هو {price_text}. هل ترغب بالتفاصيل أو خيارات إضافية؟",
+            'product_ids': [product_match.get('id')]
+        }
+
+    if product_match and any(keyword in normalized for keyword in ['مواصفات', 'تفاصيل', 'specs', 'detail']):
+        specs = product_match.get('specifications')
+        specs_text = f"المواصفات:\n{specs}" if specs else 'لا توجد مواصفات مفصلة حالياً.'
+        return {
+            'text': f"تفاصيل {product_match.get('name')}:\n{specs_text}",
+            'product_ids': [product_match.get('id')]
+        }
+
+    if any(keyword in normalized for keyword in ['اقترح', 'ترشيح', 'اختيار', 'أفضل', 'منتجات', 'عندكم', 'عرض']):
+        top_products = products[:3]
+        names = '، '.join([p.get('name') for p in top_products if p.get('name')])
+        return {
+            'text': f"هذه بعض المنتجات المتوفرة حالياً: {names}. يمكنك الضغط على أي بطاقة لمعرفة التفاصيل.",
+            'product_ids': [p.get('id') for p in top_products]
+        }
+
+    if product_match:
+        return {
+            'text': f"يسعدني مساعدتك بخصوص {product_match.get('name')}. هل ترغب بمعرفة السعر أو التفاصيل أو توفر الكمية؟",
+            'product_ids': [product_match.get('id')]
+        }
+
+    top_products = products[:2]
+    return {
+        'text': 'أخبرني بما تحتاجه بالتحديد (السعر، المواصفات، أو الاستخدام) وسأقترح لك الأنسب.',
+        'product_ids': [p.get('id') for p in top_products]
+    }
+
+def emit_ai_typing(conversation_id, is_typing):
+    socketio.emit('user_typing', {
+        'userId': AI_AGENT_ID,
+        'userName': AI_AGENT_NAME,
+        'isTyping': is_typing
+    }, room=conversation_id, include_self=False)
+
+def send_ai_message(conn, conversation_id, text=None, product_id=None):
+    message_id = str(uuid.uuid4())
+    final_message = text or ('[بطاقة منتج]' if product_id else '')
+    cursor = conn.cursor()
+    cursor.execute('''INSERT INTO messages 
+        (id, conversation_id, sender_id, message, product_id, message_type) 
+        VALUES (?, ?, ?, ?, ?, ?)''',
+        (message_id, conversation_id, AI_AGENT_ID, final_message, product_id, 'text'))
+    cursor.execute('UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                   (conversation_id,))
+    conn.commit()
+
+    if product_id:
+        cursor.execute('''SELECT m.*, u.name as sender_name, u.role as sender_role,
+            p.name as product_name, p.description as product_description, 
+            p.price as product_price, p.image_url as product_image_url,
+            p.video_url as product_video_url, p.specifications as product_specifications
+            FROM messages m
+            JOIN users u ON m.sender_id = u.id
+            LEFT JOIN products p ON m.product_id = p.id
+            WHERE m.id = ?''', (message_id,))
+    else:
+        cursor.execute('''SELECT m.*, u.name as sender_name, u.role as sender_role
+            FROM messages m
+            JOIN users u ON m.sender_id = u.id
+            WHERE m.id = ?''', (message_id,))
+    saved_message = cursor.fetchone()
+    if saved_message:
+        message_dict = dict(saved_message)
+        if product_id and saved_message.get('product_name'):
+            message_dict['product'] = {
+                'id': product_id,
+                'name': saved_message.get('product_name'),
+                'description': saved_message.get('product_description'),
+                'price': saved_message.get('product_price'),
+                'image_url': saved_message.get('product_image_url'),
+                'video_url': saved_message.get('product_video_url'),
+                'specifications': saved_message.get('product_specifications')
+            }
+        socketio.emit('new_message', message_dict, room=conversation_id)
+
+def start_ai_conversation(conversation_id, customer_id):
+    if not AI_AGENT_ENABLED:
+        return
+    conn = get_db()
+    ensure_ai_agent(conn)
+    conn.commit()
+    customer_socket_id = next((sid for sid, u in active_users.items()
+                              if u['id'] == customer_id), None)
+    if customer_socket_id:
+        socketio.emit('sales_rep_assigned', {
+            'conversationId': conversation_id,
+            'salesRepId': AI_AGENT_ID,
+            'salesRepName': AI_AGENT_NAME
+        }, room=customer_socket_id)
+    cursor = conn.cursor()
+    cursor.execute('''SELECT COUNT(*) as ai_messages FROM messages
+        WHERE conversation_id = ? AND sender_id = ?''', (conversation_id, AI_AGENT_ID))
+    if cursor.fetchone()['ai_messages'] == 0:
+        send_ai_message(conn, conversation_id, text='مرحباً! أنا وكيل المبيعات الذكي. كيف يمكنني مساعدتك اليوم؟')
+
+def run_ai_response(conversation_id, customer_message):
+    if not AI_AGENT_ENABLED:
+        return
+    conn = get_db()
+    ensure_ai_agent(conn)
+    cursor = conn.cursor()
+    cursor.execute('SELECT status, sales_rep_id FROM conversations WHERE id = ?', (conversation_id,))
+    conversation = cursor.fetchone()
+    if not conversation or conversation['status'] != 'waiting' or conversation['sales_rep_id']:
+        return
+    products = fetch_products(conn)
+    payload = build_ai_response(customer_message, products)
+    emit_ai_typing(conversation_id, True)
+    time.sleep(0.8)
+    emit_ai_typing(conversation_id, False)
+    if payload.get('text'):
+        send_ai_message(conn, conversation_id, text=payload['text'])
+    for product_id in payload.get('product_ids', []):
+        if product_id:
+            send_ai_message(conn, conversation_id, product_id=product_id)
 
 # تهيئة قاعدة البيانات عند بدء التشغيل
 init_db()
@@ -1065,17 +1225,26 @@ def handle_register(user_data):
                             'socketId': request.sid
                         })
                         
+                        cursor.execute('''SELECT COUNT(*) as online_reps FROM users
+                            WHERE role = 'sales_rep' AND is_online = 1''')
+                        online_reps = cursor.fetchone()['online_reps']
+
                         # محاولة تعيين مندوب مبيعات
                         try:
                             assign_sales_rep(conversation_id, user_id)
                         except Exception as e:
                             print(f'Error assigning sales rep: {e}')
+
+                        if online_reps == 0:
+                            start_ai_conversation(conversation_id, user_id)
                         
                         socketio.emit('conversation_created', {'conversationId': conversation_id})
                         socketio.emit('waiting_customers_update', len(waiting_customers))
                     else:
                         conversation_id = conversation['id']
                         socketio.emit('conversation_joined', {'conversationId': conversation_id})
+                        if conversation['status'] == 'waiting' and not conversation['sales_rep_id']:
+                            start_ai_conversation(conversation_id, user_id)
                     
                     # حفظ جلسة العميل
                     if conversation_id:
@@ -1304,6 +1473,9 @@ def handle_send_message(data):
                         'specifications': saved_message.get('product_specifications')
                     }
                 socketio.emit('new_message', message_dict, room=conversation_id)
+
+            if user['role'] == 'customer' and message:
+                socketio.start_background_task(run_ai_response, conversation_id, message)
             
             return  # نجح، اخرج من الدالة
             

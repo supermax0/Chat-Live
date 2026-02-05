@@ -662,7 +662,10 @@ function addMessageToChat(message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${message.sender_id === currentRepId ? 'sent' : 'received'}`;
     
-    const senderName = message.sender_name || (message.sender_role === 'sales_rep' ? 'أنت' : 'العميل');
+    let senderName = message.sender_name || (message.sender_role === 'sales_rep' ? 'أنت' : 'العميل');
+    if (message.sender_role === 'ai_agent') {
+        senderName = 'وكيل المبيعات الذكي';
+    }
     const timestamp = new Date(message.created_at).toLocaleTimeString('ar-SA', { 
         hour: '2-digit', 
         minute: '2-digit' 

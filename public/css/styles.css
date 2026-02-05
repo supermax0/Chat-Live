@@ -2904,6 +2904,11 @@ input[type="file"] {
     border-right: 3px solid var(--success);
 }
 
+.admin-message.ai-message {
+    background: rgba(139, 92, 246, 0.12);
+    border-right: 3px solid #8b5cf6;
+}
+
 .admin-message.customer-message {
     background: rgba(59, 130, 246, 0.1);
     border-right: 3px solid var(--info);

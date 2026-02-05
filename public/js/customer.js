@@ -232,12 +232,16 @@ socket.on('new_message', (message) => {
 
 socket.on('user_typing', (data) => {
     if (data.isTyping && data.userId !== currentUserId) {
+        if (data.userName) {
+            typingIndicator.querySelector('span').textContent = `${data.userName} يكتب`;
+        }
         typingIndicator.classList.remove('hidden');
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             typingIndicator.classList.add('hidden');
         }, 3000);
     } else {
+        typingIndicator.querySelector('span').textContent = 'مندوب المبيعات يكتب';
         typingIndicator.classList.add('hidden');
     }
 });
@@ -246,7 +250,10 @@ function addMessageToChat(message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${message.sender_id === currentUserId ? 'sent' : 'received'}`;
     
-    const senderName = message.sender_name || (message.sender_role === 'customer' ? 'أنت' : 'مندوب المبيعات');
+    let senderName = message.sender_name || (message.sender_role === 'customer' ? 'أنت' : 'مندوب المبيعات');
+    if (message.sender_role === 'ai_agent') {
+        senderName = 'وكيل المبيعات الذكي';
+    }
     const timestamp = new Date(message.created_at).toLocaleTimeString('ar-SA', { 
         hour: '2-digit', 
         minute: '2-digit' 
